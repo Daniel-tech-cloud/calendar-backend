@@ -12,7 +12,7 @@ const validarCampos = ( req, resp = response, next ) =>{
              errors: errors.mapped()
          })
      }
-
+     
      next();
 
 }
