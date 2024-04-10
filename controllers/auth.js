@@ -3,20 +3,7 @@ const bcryptjs = require('bcryptjs')
 const Usuario = require('../models/user');
 
 
-const loginUsuario = ( req, resp = response ) =>{
-    const { email, password } = req.body ;
-
-    resp.status(201).json({
-        ok: true,
-        msg: 'Login', 
-        email, 
-        password
-
-    })
-}
-
 const crearUsuario = async( req, resp = response ) =>{
-
     const {  email, password } = req.body ;
     try {
         let usuario = await Usuario.findOne({ email });
@@ -37,19 +24,53 @@ const crearUsuario = async( req, resp = response ) =>{
         resp.status(201).json({
             ok: true,
             uid: usuario.id,
-            name: usuario.name
-    
+            name: usuario.name  
         })
         
     } catch (error) {
         resp.status(500).json({
             ok: false,
             msg: 'Por favor hable con el administrador'
-    
         })
     }
-
 }
+
+
+const loginUsuario = async( req, resp = response ) =>{
+    const { email, password } = req.body ;
+    try {
+        const usuario = await Usuario.findOne({ email });
+        if( !usuario ){
+            return resp.status(400).json({
+                ok: false,
+                msg: 'El usuario no existe con ese email'
+            })
+        }
+
+        // Confirmar contraseña
+        const validarContraseña = bcryptjs.compareSync( password, usuario.password );
+        if( !validarContraseña ){
+            return resp.status(400).json({
+                ok: false,
+                msg: 'Contraseña incorrecta'
+            });
+        }
+
+        // Generar JSOn Web Token (JWT)
+        resp.json({
+            ok: true,
+            uid: usuario.id,
+            name: usuario.name
+        });
+
+    } catch (error) {
+        resp.status(500).json({
+            ok: false,
+            msg: 'Por favor hable con el administrador'
+        });
+    }
+}
+
 
 const revalidarToken = ( req, resp = response ) =>{
     resp.json({
